@@ -20,13 +20,13 @@ function printOnce(){
 }
 
 async function startRecording(fileHandle, frameStream, trackSettings) {
-  fileWritableStream = await fileHandle.createWritable();
+  // fileWritableStream = await fileHandle.createWritable();
 
-  webmWriter = new WebMWriter({
-      fileWriter: fileWritableStream,
-      codec: 'VP9',
-      width: trackSettings.width,
-      height: trackSettings.height});
+  // webmWriter = new WebMWriter({
+  //     fileWriter: fileWritableStream,
+  //     codec: 'VP9',
+  //     width: trackSettings.width,
+  //     height: trackSettings.height});
 
   frameReader = frameStream.getReader();
 
@@ -87,20 +87,20 @@ async function startRecording(fileHandle, frameStream, trackSettings) {
       // const insert_keyframe = (frameCounter % 150) == 0;
       map.set(frame.timestamp, performance.now());
       encoder.encode(frame, { keyFrame: false });
+      frame.close();
       await sleep(5);
     // } else {
     //   console.log('dropping frame, encoder falling behind');
     // }
-
-    frame.close();
     frameReader.read().then(processFrame);
   });
 }
 
 async function stopRecording() {
+  console.log('stop recording called');
   await frameReader.cancel();
-  await webmWriter.complete();
-  fileWritableStream.close();
+  // await webmWriter.complete();
+  // fileWritableStream.close();
   frameReader = null;
   webmWriter = null;
   fileWritableStream = null;
