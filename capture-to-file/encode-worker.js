@@ -56,7 +56,7 @@ async function startRecording(fileHandle, frameStream, trackSettings) {
     hardwareAcceleration: 'prefer-hardware',
     bitrate: 10e6,
     framerate: 30,
-    scalabilityMode: 'L1T1',
+    // scalabilityMode: 'L1T1',
     alpha: 'discard',
     bitrateMode: 'constant',
     latencyMode: 'realtime',
