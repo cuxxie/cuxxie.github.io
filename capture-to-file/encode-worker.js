@@ -59,7 +59,7 @@ async function startRecording(fileHandle, frameStream, trackSettings) {
     // scalabilityMode: 'L1T1',
     // alpha: 'discard',
     // bitrateMode: 'constant',
-    latencyMode: 'realtime',
+    // latencyMode: 'realtime',
   };
 
   let encoder = new VideoEncoder(init);
