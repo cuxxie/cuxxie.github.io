@@ -41,7 +41,6 @@ async function startRecording(fileHandle, frameStream, trackSettings) {
   encoder.configure(config);
 
   frameReader.read().then(async function processFrame({done, value}) {
-    console.log("time: "+performance.now())
     let frame = value;
 
     if(done) {
