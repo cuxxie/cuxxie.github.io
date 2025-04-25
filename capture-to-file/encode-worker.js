@@ -11,8 +11,6 @@ function sleep(ms) {
 }
 
 async function startRecording(fileHandle, frameStream, trackSettings) {
-  let frameCounter = 0;
-
   fileWritableStream = await fileHandle.createWritable();
 
   webmWriter = new WebMWriter({
@@ -64,7 +62,7 @@ async function startRecording(fileHandle, frameStream, trackSettings) {
     //     console.log(frameCounter + ' frames processed');
     //   }
 
-    freameCounter++;
+    frameCounter++;
       const insert_keyframe = (frameCounter % 150) == 0;
     console.log('in: '+performance.now());
       encoder.encode(frame, { keyFrame: insert_keyframe });
