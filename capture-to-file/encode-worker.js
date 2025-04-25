@@ -37,6 +37,7 @@ async function startRecording(fileHandle, frameStream, trackSettings) {
     width: trackSettings.width,
     height: trackSettings.height,
     bitrate: 10e6,
+    framerate: 30,
   };
 
   let encoder = new VideoEncoder(init);
