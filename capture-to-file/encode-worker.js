@@ -3,6 +3,12 @@ importScripts('./webm-writer2.js')
 let webmWriter = null;
 let fileWritableStream = null;
 let frameReader = null;
+const FRAME_TO_ENCODE = 6000;
+let frameCounter = 0;
+
+function sleep(ms) {
+  return new Promise(resolve => setTimeout(resolve, ms));
+}
 
 async function startRecording(fileHandle, frameStream, trackSettings) {
   let frameCounter = 0;
@@ -41,6 +47,10 @@ async function startRecording(fileHandle, frameStream, trackSettings) {
   encoder.configure(config);
 
   frameReader.read().then(async function processFrame({done, value}) {
+    if(frameCounter > FRAME_TO_ENCODE){
+      stopRecording()
+      return;
+    }
     let frame = value;
 
     if(done) {
@@ -54,9 +64,11 @@ async function startRecording(fileHandle, frameStream, trackSettings) {
     //     console.log(frameCounter + ' frames processed');
     //   }
 
+    freameCounter++;
       const insert_keyframe = (frameCounter % 150) == 0;
     console.log('in: '+performance.now());
       encoder.encode(frame, { keyFrame: insert_keyframe });
+      await sleep(5);
     // } else {
     //   console.log('dropping frame, encoder falling behind');
     // }
