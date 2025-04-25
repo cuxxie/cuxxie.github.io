@@ -65,6 +65,7 @@ async function startRecording(fileHandle, frameStream, trackSettings) {
   frameReader.read().then(async function processFrame({done, value}) {
     console.log(frameCounter);
     if(frameCounter > FRAME_TO_ENCODE){
+      printOnce();
       stopRecording()
       return;
     }
