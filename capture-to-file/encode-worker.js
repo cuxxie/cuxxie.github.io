@@ -19,6 +19,7 @@ async function startRecording(fileHandle, frameStream, trackSettings) {
 
   const init = {
     output: (chunk) => {
+      console.log('out: '+performance.now());
       webmWriter.addFrame(chunk);
     },
     error: (e) => {
@@ -49,16 +50,17 @@ async function startRecording(fileHandle, frameStream, trackSettings) {
       return;
     }
 
-    if (encoder.encodeQueueSize <= 30) {
-      if (++frameCounter % 20 == 0) {
-        console.log(frameCounter + ' frames processed');
-      }
+    // if (encoder.encodeQueueSize <= 30) {
+    //   if (++frameCounter % 20 == 0) {
+    //     console.log(frameCounter + ' frames processed');
+    //   }
 
-      const insert_keyframe = (frameCounter % 150) == 0;
+    //   const insert_keyframe = (frameCounter % 150) == 0;
+    console.log('in: '+performance.now());
       encoder.encode(frame, { keyFrame: insert_keyframe });
-    } else {
-      console.log('dropping frame, encoder falling behind');
-    }
+    // } else {
+    //   console.log('dropping frame, encoder falling behind');
+    // }
 
     frame.close();
     frameReader.read().then(processFrame);
