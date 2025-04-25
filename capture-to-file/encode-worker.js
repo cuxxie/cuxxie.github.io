@@ -50,7 +50,7 @@ async function startRecording(fileHandle, frameStream, trackSettings) {
   };
 
   const config = {
-    codec: "vp09.00.10.08",
+    codec: "hvc1.1.6.L123.00",
     width: trackSettings.width,
     height: trackSettings.height,
     bitrate: 10e6,
@@ -63,7 +63,7 @@ async function startRecording(fileHandle, frameStream, trackSettings) {
   encoder.configure(config);
 
   frameReader.read().then(async function processFrame({done, value}) {
-    console.log(frameCounter);
+    // console.log(frameCounter);
     if(frameCounter > FRAME_TO_ENCODE){
       printOnce();
       stopRecording()
