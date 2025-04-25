@@ -5,9 +5,18 @@ let fileWritableStream = null;
 let frameReader = null;
 const FRAME_TO_ENCODE = 6000;
 let frameCounter = 0;
-
+let map = new Map();
+let duration = [];
+let printed = false;
 function sleep(ms) {
   return new Promise(resolve => setTimeout(resolve, ms));
+}
+
+function printOnce(){
+  if(!printed) {
+    printed = true;
+    console.log(duration);
+  }
 }
 
 async function startRecording(fileHandle, frameStream, trackSettings) {
@@ -23,8 +32,16 @@ async function startRecording(fileHandle, frameStream, trackSettings) {
 
   const init = {
     output: (chunk) => {
-      console.log('out: '+performance.now());
-      webmWriter.addFrame(chunk);
+      // console.log('out: '+performance.now());
+      const lNow = performance.now();
+      const ts = chunk.timestamp;
+      duration.push({
+        timestamp: ts,
+        start: map.get(ts),
+        end: lNow,
+        duration: lNow - map.get(ts)
+      });
+      // webmWriter.addFrame(chunk);
     },
     error: (e) => {
       console.log(e.message);
@@ -63,10 +80,10 @@ async function startRecording(fileHandle, frameStream, trackSettings) {
     //     console.log(frameCounter + ' frames processed');
     //   }
 
-    frameCounter++;
-      const insert_keyframe = (frameCounter % 150) == 0;
-    console.log('in: '+performance.now());
-      encoder.encode(frame, { keyFrame: insert_keyframe });
+      frameCounter++;
+      // const insert_keyframe = (frameCounter % 150) == 0;
+      map.set(frame.timestamp, performance.now());
+      encoder.encode(frame, { keyFrame: false });
       await sleep(5);
     // } else {
     //   console.log('dropping frame, encoder falling behind');
