@@ -55,7 +55,7 @@ async function startRecording(fileHandle, frameStream, trackSettings) {
     //     console.log(frameCounter + ' frames processed');
     //   }
 
-    //   const insert_keyframe = (frameCounter % 150) == 0;
+      const insert_keyframe = (frameCounter % 150) == 0;
     console.log('in: '+performance.now());
       encoder.encode(frame, { keyFrame: insert_keyframe });
     // } else {
