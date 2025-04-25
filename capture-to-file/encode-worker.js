@@ -3,7 +3,7 @@ importScripts('./webm-writer2.js')
 let webmWriter = null;
 let fileWritableStream = null;
 let frameReader = null;
-const FRAME_TO_ENCODE = 6000;
+const FRAME_TO_ENCODE = 600;
 let frameCounter = 0;
 let map = new Map();
 let duration = [];
@@ -63,6 +63,7 @@ async function startRecording(fileHandle, frameStream, trackSettings) {
   encoder.configure(config);
 
   frameReader.read().then(async function processFrame({done, value}) {
+    console.log(frameCounter);
     if(frameCounter > FRAME_TO_ENCODE){
       stopRecording()
       return;
