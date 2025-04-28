@@ -50,16 +50,17 @@ async function startRecording(fileHandle, frameStream, trackSettings) {
   };
 
   const config = {
-    codec: "hvc1.1.6.L123.00",
+    codec: "vp8",
+    // codec: "hvc1.1.6.L123.00",
     width: trackSettings.width,
     height: trackSettings.height,
     hardwareAcceleration: 'prefer-hardware',
     bitrate: 10e6,
     framerate: 30,
-    // scalabilityMode: 'L1T1',
-    // alpha: 'discard',
-    // bitrateMode: 'constant',
-    // latencyMode: 'realtime',
+    scalabilityMode: 'L1T1',
+    alpha: 'discard',
+    bitrateMode: 'constant',
+    latencyMode: 'realtime',
   };
 
   let encoder = new VideoEncoder(init);
