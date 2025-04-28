@@ -3,8 +3,8 @@ async function checkCodecs(){
         'avc1.420034',
         'hvc1.1.6.L123.00',
         'vp8',
-        'vp09.00.10.08',
-        'av01.0.04M.08',
+        'vp09.00.41.08',
+        'av01.0.09M.08',
       ];
       
       for (const codec of codecs) {
@@ -14,7 +14,6 @@ async function checkCodecs(){
           width: 1920,
           height: 1080,
           bitrate: 1_024_000,
-          bitrateMode: 'constant',
           framerate: 30,
         };
         const support = await VideoEncoder.isConfigSupported(videoEncoderConfig);
@@ -23,6 +22,12 @@ async function checkCodecs(){
             videoEncoderConfig,
           )} support: ${support.supported}`,
         );
+        const decSupport = await VideoDecoder.isConfigSupported(videoEncoderConfig);
+        console.log(
+          `VideoDecoder's config ${JSON.stringify(
+            videoEncoderConfig,
+          )} support: ${decSupport.supported}`,
+        )
       }
 }
 
