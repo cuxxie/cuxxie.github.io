@@ -92,7 +92,7 @@ async function startRecording(fileHandle, frameStream, trackSettings) {
       map.set(frame.timestamp, performance.now());
       encoder.encode(frame, { keyFrame: false });
       frame.close();
-      await sleep(5);
+      // await sleep(5);
     // } else {
     //   console.log('dropping frame, encoder falling behind');
     // }
