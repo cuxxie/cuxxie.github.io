@@ -54,7 +54,7 @@ async function startRecording(fileHandle, frameStream, trackSettings) {
     // codec: "hvc1.1.6.L123.00",
     width: trackSettings.width,
     height: trackSettings.height,
-    hardwareAcceleration: 'prefer-hardware',
+    // hardwareAcceleration: 'prefer-hardware',
     bitrate: 10e6,
     framerate: 30,
     scalabilityMode: 'L1T1',
