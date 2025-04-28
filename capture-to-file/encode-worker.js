@@ -69,7 +69,6 @@ async function startRecording(fileHandle, frameStream, trackSettings) {
   encoder.configure(config);
 
   frameReader.read().then(async function processFrame({done, value}) {
-    console.log("read frame: "+performance.now());
     // console.log(frameCounter);
     if(frameCounter > FRAME_TO_ENCODE){
       printOnce();
@@ -92,6 +91,7 @@ async function startRecording(fileHandle, frameStream, trackSettings) {
       frameCounter++;
       // const insert_keyframe = (frameCounter % 150) == 0;
       map.set(frame.timestamp, performance.now());
+      console.log("read frame: "+performance.now());
       encoder.encode(frame, { keyFrame: false });
       frame.close();
       // await sleep(1);
