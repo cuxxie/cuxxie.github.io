@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>YUV to Canvas Animation (30 FPS)</title>
+    <style>
+        canvas {
+            border: 1px solid black;
+        }
+    </style>
+</head>
+
+<body>
+    <input type="file" id="yuvFileInput" accept=".yuv">
+    <canvas id="yuvCanvas"></canvas>
+
+    <script>
+        const canvas = document.getElementById('yuvCanvas');
+        const ctx = canvas.getContext('2d');
+        const fileInput = document.getElementById('yuvFileInput');
+
+        const init = {
+            output: (chunk) => {
+                // console.log('out: '+performance.now());
+                const lNow = performance.now();
+                const ts = chunk.timestamp;
+                duration.push({
+                    timestamp: ts,
+                    start: map.get(ts),
+                    end: lNow,
+                    duration: lNow - map.get(ts)
+                });
+                // webmWriter.addFrame(chunk);
+            },
+            error: (e) => {
+                console.log(e.message);
+            }
+        };
+        let yuvData;
+        let width, height;
+        let frameIndex = 0;
+        let flagInc = true;
+        let frameSize;
+        const targetFPS = 30;
+        const frameInterval = 1000 / targetFPS; // Milliseconds per frame
+
+        let map = new Map();
+let duration = [];
+        let lastFrameTime = 0;
+        let videoEncoder =
+            fileInput.addEventListener('change', handleFileSelect, false);
+
+        function handleFileSelect(event) {
+            const file = event.target.files[0];
+            const reader = new FileReader();
+
+            reader.onload = function (event) {
+                yuvData = new Uint8Array(event.target.result);
+                width = 1280; //parseInt(prompt("Enter width:", "1280"));
+                height = 720; //parseInt(prompt("Enter height:", "720"));
+
+                if (isNaN(width) || isNaN(height)) {
+                    alert("Invalid width or height");
+                    return;
+                }
+
+                canvas.width = width;
+                canvas.height = height;
+                frameSize = width * height * 1.5;
+                frameIndex = 0;
+                lastFrameTime = performance.now(); // Initialize time
+                renderFrame();
+            };
+
+            reader.readAsArrayBuffer(file);
+        }
+
+        function encode(frameData) {
+
+        }
+
+        function renderFrame(timestamp) {
+            if (!yuvData) return;
+
+            const now = performance.now();
+            const elapsed = now - lastFrameTime;
+
+            if (elapsed >= frameInterval) {
+                lastFrameTime = performance.now(); //now - (elapsed % frameInterval);
+
+                let frameStart = frameIndex * frameSize;
+                let frameEnd = frameStart + frameSize;
+
+                if ((frameIndex == 299 && flagInc) || (frameIndex == 0 && !flagInc)) {
+                    flagInc = !flagInc;
+                }
+
+                const frameData = yuvData.slice(frameStart, frameEnd);
+                const rgbData = yuv420ToRGB(frameData, width, height);
+
+                const imageData = ctx.createImageData(width, height);
+                imageData.data.set(rgbData);
+                ctx.putImageData(imageData, 0, 0);
+                if (flagInc) frameIndex++;
+                else frameIndex--;
+                encode(frameData);
+            }
+            requestAnimationFrame(renderFrame);
+        }
+
+        function yuv420ToRGB(yuvData, width, height) {
+            const rgbData = new Uint8ClampedArray(width * height * 4);
+            let y, u, v, r, g, b;
+
+            for (let j = 0; j < height; j++) {
+                for (let i = 0; i < width; i++) {
+                    const yIndex = j * width + i;
+                    const uvIndex = Math.floor(j / 2) * Math.floor(width / 2) + Math.floor(i / 2);
+
+                    y = yuvData[yIndex];
+                    u = yuvData[width * height + uvIndex];
+                    v = yuvData[width * height * 1.25 + uvIndex];
+
+                    // YUV to RGB conversion (correct formulas)
+                    r = y + 1.402 * (v - 128);
+                    g = y - 0.34414 * (u - 128) - 0.71414 * (v - 128);
+                    b = y + 1.772 * (u - 128);
+
+                    // Clamp RGB values to 0-255
+                    r = Math.max(0, Math.min(255, r));
+                    g = Math.max(0, Math.min(255, g));
+                    b = Math.max(0, Math.min(255, b));
+
+                    const rgbIndex = (j * width + i) * 4;
+                    rgbData[rgbIndex] = r;
+                    rgbData[rgbIndex + 1] = g;
+                    rgbData[rgbIndex + 2] = b;
+                    rgbData[rgbIndex + 3] = 255; // Alpha
+                }
+            }
+
+            return rgbData;
+        }
+    </script>
+</body>
+
+</html>

@@ -11,8 +11,8 @@ async function checkCodecs(){
         const videoEncoderConfig = {
           codec,
           hardwareAcceleration: 'prefer-hardware',
-          width: 160,
-          height: 80,
+          width: 1920,
+          height: 1080,
           bitrate: 1_024_000,
           bitrateMode: 'constant',
           framerate: 30,
