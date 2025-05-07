@@ -40,32 +40,33 @@
 
     // In your startRecording function or a similar setup
     let currentTimestamp = 0;
-    const frameRate = 30; // Desired frames per second
-    const frameDuration = 1000000 / frameRate; // Duration in microseconds
+    // const frameRate = 30; // Desired frames per second
+    // const frameDuration = 1000000 / frameRate; // Duration in microseconds
 
-    const frameStream = new ReadableStream({
-      async pull(controller) {
-        // Or use setInterval/requestAnimationFrame for continuous generation
-        // For this pull-based example, we generate a frame when requested
-        const blackFrame = createBlackI420Frame(1920, 1080, currentTimestamp);
-        controller.enqueue(blackFrame);
-        currentTimestamp += frameDuration;
+    // const frameStream = stream;
+    // new ReadableStream({
+    //   async pull(controller) {
+    //     // Or use setInterval/requestAnimationFrame for continuous generation
+    //     // For this pull-based example, we generate a frame when requested
+    //     const blackFrame = createBlackI420Frame(1920, 1080, currentTimestamp);
+    //     controller.enqueue(blackFrame);
+    //     currentTimestamp += frameDuration;
 
-        // Add logic to stop the stream or handle backpressure if needed
-      }
-    });
+    //     // Add logic to stop the stream or handle backpressure if needed
+    //   }
+    // });
 
-    const trackSettings = {
-      width: 1920,
-      height: 1080,
-      frameRate: 30 // Match your generation rate
-      // Add other relevant settings if your worker expects them
-    };
+    // const trackSettings = {
+    //   width: 1920,
+    //   height: 1080,
+    //   frameRate: 30 // Match your generation rate
+    //   // Add other relevant settings if your worker expects them
+    // };
 
-    // videoTrack = stream.getTracks()[0];
-    // let trackSettings = videoTrack.getSettings();
-    // let trackProcessor = new MediaStreamTrackProcessor(videoTrack);
-    // let frameStream = trackProcessor.readable;
+    videoTrack = stream.getTracks()[0];
+    let trackSettings = videoTrack.getSettings();
+    let trackProcessor = new MediaStreamTrackProcessor(videoTrack);
+    let frameStream = trackProcessor.readable;
 
     // Encoder I/O and file writing happens in a Worker to keep the UI
     // responsive.
@@ -106,41 +107,41 @@
   };
 
   // Example for generating a black I420 frame
-  function createBlackI420Frame(width, height, timestamp) {
-    const yPlaneSize = width * height;
-    const uvPlaneSize = (width / 2) * (height / 2);
-    const frameDataSize = yPlaneSize + 2 * uvPlaneSize;
-    const frameBuffer = new ArrayBuffer(frameDataSize);
-    const frameData = new Uint8Array(frameBuffer);
+  // function createBlackI420Frame(width, height, timestamp) {
+  //   const yPlaneSize = width * height;
+  //   const uvPlaneSize = (width / 2) * (height / 2);
+  //   const frameDataSize = yPlaneSize + 2 * uvPlaneSize;
+  //   const frameBuffer = new ArrayBuffer(frameDataSize);
+  //   const frameData = new Uint8Array(frameBuffer);
 
-    // Fill Y plane with 0 (black)
-    frameData.fill(0, 0, yPlaneSize);
-    // Fill U and V planes with 128 (neutral chroma)
-    frameData.fill(128, yPlaneSize, yPlaneSize + 2 * uvPlaneSize);
+  //   // Fill Y plane with 0 (black)
+  //   frameData.fill(0, 0, yPlaneSize);
+  //   // Fill U and V planes with 128 (neutral chroma)
+  //   frameData.fill(128, yPlaneSize, yPlaneSize + 2 * uvPlaneSize);
 
-    return new VideoFrame(frameData, {
-      format: 'I420',
-      codedWidth: width,
-      codedHeight: height,
-      timestamp: timestamp, // in microseconds
-      // You might need to specify layout for planar formats if default isn't I420
-      // layout: [
-      //   { offset: 0, stride: width }, // Y
-      //   { offset: yPlaneSize, stride: width / 2 }, // U
-      //   { offset: yPlaneSize + uvPlaneSize, stride: width / 2 }  // V
-      // ]
-      // colorSpace can also be specified if needed
-    });
-  }
+  //   return new VideoFrame(frameData, {
+  //     format: 'I420',
+  //     codedWidth: width,
+  //     codedHeight: height,
+  //     timestamp: timestamp, // in microseconds
+  //     // You might need to specify layout for planar formats if default isn't I420
+  //     // layout: [
+  //     //   { offset: 0, stride: width }, // Y
+  //     //   { offset: yPlaneSize, stride: width / 2 }, // U
+  //     //   { offset: yPlaneSize + uvPlaneSize, stride: width / 2 }  // V
+  //     // ]
+  //     // colorSpace can also be specified if needed
+  //   });
+  // }
 
   async function main() {
-    // let constraints = {
-    //   audio: false,
-    //   video: {width: 1280, height: 720, frameRate: 30}
-    // };
-    // stream = await window.navigator.mediaDevices.getUserMedia(constraints);
-    // let video = document.getElementById('src');
-    // video.srcObject = stream;
+    let constraints = {
+      audio: false,
+      video: {width: 1920, height: 1080, frameRate: 30}
+    };
+    stream = await window.navigator.mediaDevices.getUserMedia(constraints);
+    let video = document.getElementById('src');
+    video.srcObject = stream;
 
 
     // In your startRecording function or a similar setup
