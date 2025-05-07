@@ -40,8 +40,6 @@ async function startRecording(fileHandle, frameStream, trackSettings) {
         start: map.get(ts),
         end: lNow,
         duration: lNow - map.get(ts),
-        width: metadata.decoderConfig.codedWidth,
-        height: metadata.decoderConfig.codedWidth
       };
       console.log(item);
       // duration.push({
@@ -101,6 +99,7 @@ async function startRecording(fileHandle, frameStream, trackSettings) {
       // const insert_keyframe = (frameCounter % 150) == 0;
       map.set(frame.timestamp, performance.now());
       // console.log("read frame: "+performance.now());
+      console.log(`encode frame: ${frame.codedWidth}x${frame.codedHeight}`);
       encoder.encode(frame, { keyFrame: false });
       frame.close();
       // await sleep(1);
