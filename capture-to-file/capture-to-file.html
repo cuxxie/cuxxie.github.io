@@ -24,9 +24,7 @@
   let encodeWorker = null;
   let stream = null;
   let videoTrack = null;
-  let map = new Map();
-  let duration = [];
-  
+
   async function startRecording() {
     console.assert(button.innerText == 'Record');
     button.disabled = true;

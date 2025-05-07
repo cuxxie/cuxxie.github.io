@@ -31,16 +31,25 @@ async function startRecording(fileHandle, frameStream, trackSettings) {
   frameReader = frameStream.getReader();
 
   const init = {
-    output: (chunk) => {
+    output: (chunk, metadata) => {
       // console.log('out: '+performance.now());
       const lNow = performance.now();
       const ts = chunk.timestamp;
-      duration.push({
+      const item = {
         timestamp: ts,
         start: map.get(ts),
         end: lNow,
-        duration: lNow - map.get(ts)
-      });
+        duration: lNow - map.get(ts),
+        width: metadata.decoderConfig.codedWidth,
+        height: metadata.decoderConfig.codedWidth
+      };
+      console.log(item);
+      // duration.push({
+      //   timestamp: ts,
+      //   start: map.get(ts),
+      //   end: lNow,
+      //   duration: lNow - map.get(ts)
+      // });
       // webmWriter.addFrame(chunk);
     },
     error: (e) => {
@@ -50,11 +59,11 @@ async function startRecording(fileHandle, frameStream, trackSettings) {
   };
 
   const config = {
-    codec: "vp8",
-    // codec: "hvc1.1.6.L123.00",
+    // codec: "vp8",
+    codec: "hvc1.1.6.L123.00",
     width: trackSettings.width,
     height: trackSettings.height,
-    // hardwareAcceleration: 'prefer-hardware',
+    hardwareAcceleration: 'prefer-hardware',
     bitrate: 10e6,
     framerate: 30,
     scalabilityMode: 'L1T1',
@@ -91,7 +100,7 @@ async function startRecording(fileHandle, frameStream, trackSettings) {
       frameCounter++;
       // const insert_keyframe = (frameCounter % 150) == 0;
       map.set(frame.timestamp, performance.now());
-      console.log("read frame: "+performance.now());
+      // console.log("read frame: "+performance.now());
       encoder.encode(frame, { keyFrame: false });
       frame.close();
       // await sleep(1);
