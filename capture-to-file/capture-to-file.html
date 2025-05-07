@@ -17,7 +17,7 @@
 </style>
 
 <button id="record" width=1280 onclick="onButtonClicked()">Record</button>
-<video id="src" autoplay muted width=1280 height=720></video>
+<video id="src" autoplay muted width=1920 height=1080></video>
 <script>
   let video = document.getElementById('src');
   let button = document.getElementById('record');
@@ -47,7 +47,7 @@
       async pull(controller) {
         // Or use setInterval/requestAnimationFrame for continuous generation
         // For this pull-based example, we generate a frame when requested
-        const blackFrame = createBlackI420Frame(1280, 720, currentTimestamp);
+        const blackFrame = createBlackI420Frame(1920, 1080, currentTimestamp);
         controller.enqueue(blackFrame);
         currentTimestamp += frameDuration;
 
@@ -56,8 +56,8 @@
     });
 
     const trackSettings = {
-      width: 1280,
-      height: 720,
+      width: 1920,
+      height: 1080,
       frameRate: 30 // Match your generation rate
       // Add other relevant settings if your worker expects them
     };
