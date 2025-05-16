@@ -174,8 +174,8 @@ async function initializeDecoder(ivfFrames) {
             timestamp: i * frameDurationMs * 1000, // Timestamps in microseconds
             data: frame.data,
         });
-
         videoDecoder.decode(chunk);
+        await new Promise(r => setTimeout(r, 2000));
     }
 
     // Start the rendering loop
