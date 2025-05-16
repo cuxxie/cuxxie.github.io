@@ -1,22 +1,18 @@
-// playback.js
+// playback.js (Direct Draw version)
 
 const canvas = document.getElementById('videoCanvas');
 const ctx = canvas.getContext('2d');
 const playButton = document.getElementById('playButton');
 const statusDiv = document.getElementById('status');
 
-const IVF_FILE_PATH = 'output_30fps.vp9.ivf'; // Make sure this path is correct
+const IVF_FILE_PATH = 'output_30fps.ivf'; // Ensure this path is correct
 
 let videoDecoder = null;
-let currentFrameQueue = [];
 let framesDecoded = 0;
 let framesRendered = 0;
-let frameRate = 30; // Will be updated from IVF header
-let videoWidth = 0;  // Will be updated from IVF header
-let videoHeight = 0; // Will be updated from IVF header
-let lastRenderTime = 0;
-let animationFrameId = null;
-let isPlaying = false;
+let videoWidth = 0;
+let videoHeight = 0;
+let totalIvfFrames = 0; // To track when all frames are expected
 
 // Utility to read bytes from a DataView
 function readU16(view, offset) {
@@ -51,7 +47,7 @@ function parseIvfHeader(buffer) {
     const height = readU16(view, 14);
     const frameRateNumerator = readU32(view, 16);
     const frameRateDenominator = readU32(view, 20);
-    const totalFrames = readU32(view, 24); // Not strictly needed for playback, but good for info
+    const totalFrames = readU32(view, 24);
 
     if (headerLength !== 32) {
         console.warn("Unexpected IVF header length:", headerLength);
@@ -90,7 +86,7 @@ function parseIvfFrames(buffer, startOffset) {
         }
 
         const frameSize = readU32(view, offset);
-        const timestamp = readU32(view, offset + 4); // Lower 32 bits of 64-bit timestamp
+        const timestamp = readU32(view, offset + 4);
 
         const frameDataStart = offset + 12;
         const frameDataEnd = frameDataStart + frameSize;
@@ -103,8 +99,7 @@ function parseIvfFrames(buffer, startOffset) {
         const data = new Uint8Array(buffer, frameDataStart, frameSize);
         frames.push({
             data,
-            timestamp, // This timestamp might need more precise handling for 64-bit timestamps if available in future IVF versions
-            duration: 0 // Placeholder, duration will be calculated based on frame rate
+            timestamp,
         });
 
         offset = frameDataEnd;
@@ -114,9 +109,9 @@ function parseIvfFrames(buffer, startOffset) {
 
 /**
  * Initializes the VideoDecoder and starts the decoding process.
- * @param {Array<object>} ivfFrames - Array of parsed IVF frame objects.
+ * @param {Array<object>} ivfEncodedFrames - Array of parsed IVF encoded frame objects.
  */
-async function initializeDecoder(ivfFrames) {
+async function initializeDecoder(ivfEncodedFrames) {
     statusDiv.textContent = "Initializing decoder...";
 
     if (!window.VideoDecoder) {
@@ -127,115 +122,78 @@ async function initializeDecoder(ivfFrames) {
 
     videoDecoder = new VideoDecoder({
         output: (videoFrame) => {
-            currentFrameQueue.push(videoFrame);
-            framesDecoded++;
+            // DIRECT DRAW: Draw the frame immediately as it's decoded
+            if (canvas.width !== videoFrame.codedWidth || canvas.height !== videoFrame.codedHeight) {
+                canvas.width = videoFrame.codedWidth;
+                canvas.height = videoFrame.codedHeight;
+                videoWidth = videoFrame.codedWidth;
+                videoHeight = videoFrame.codedHeight;
+                console.log("Canvas resized to:", canvas.width, "x", canvas.height);
+            }
+
+            ctx.drawImage(videoFrame, 0, 0, canvas.width, canvas.height);
+            videoFrame.close(); // Release the VideoFrame memory immediately
+            framesRendered++;
             statusDiv.textContent = `Decoded: ${framesDecoded} | Rendered: ${framesRendered}`;
+
+            // Check if all frames have been rendered and decoded
+            if (framesRendered === totalIvfFrames && framesDecoded === totalIvfFrames) {
+                statusDiv.textContent = `Playback finished. Decoded: ${framesDecoded} | Rendered: ${framesRendered}`;
+                console.log("All frames decoded and rendered.");
+                playButton.disabled = false; // Re-enable button
+            }
         },
         error: (e) => {
             console.error("VideoDecoder error:", e);
             statusDiv.textContent = `Decoder Error: ${e.message}`;
-            isPlaying = false;
-            if (animationFrameId) {
-                cancelAnimationFrame(animationFrameId);
-                animationFrameId = null;
-            }
+            playButton.disabled = false;
         },
     });
 
     const config = {
-        codec: 'vp09.00.10.08', // This matches the VP9 profile 0, 8-bit depth
-        // You can also provide the codec string as extracted from the IVF header if it were more detailed:
-        // codec: 'vp9', // Simpler, often sufficient
+        codec: 'vp9', // Or 'vp09.00.10.08' if you want to be more specific
         codedWidth: videoWidth,
         codedHeight: videoHeight,
-        // You might need a more precise description of the profile if it's not default
-        // e.g., 'vp09.00.10.08' is for Profile 0, Level 1.0, 8-bit
-        // For your file, 'vp09.00.10.08' or just 'vp9' should work for the codec.
     };
 
     const support = await VideoDecoder.isConfigSupported(config);
     if (!support.supported) {
         statusDiv.textContent = "Error: VideoDecoder config not supported by your browser.";
         console.error("VideoDecoder config not supported:", config, support);
+        playButton.disabled = false;
         return;
     }
 
     videoDecoder.configure(config);
-    statusDiv.textContent = "Decoder configured. Starting decode loop...";
+    statusDiv.textContent = "Decoder configured. Starting decode...";
 
-    // Calculate frame duration for smooth playback
-    const frameDurationMs = 1000 / frameRate;
+    // Calculate frame duration for timestamp, though not strictly needed for direct draw
+    const frameDurationMicroseconds = (1000 / 30) * 1000; // 30 FPS = 33.33ms per frame = 33333 microseconds
 
-    // Start feeding frames to the decoder
-    for (let i = 0; i < ivfFrames.length; i++) {
-        const frame = ivfFrames[i];
+    // Feed all frames to the decoder
+    for (let i = 0; i < ivfEncodedFrames.length; i++) {
+        const frame = ivfEncodedFrames[i];
         const chunk = new EncodedVideoChunk({
-            type: (i === 0) ? 'key' : 'delta', // First frame is always a keyframe in IVF (assuming typical generation)
-            timestamp: i * frameDurationMs * 1000, // Timestamps in microseconds
+            type: (i === 0) ? 'key' : 'delta', // First frame is a keyframe
+            timestamp: i * frameDurationMicroseconds, // Timestamps in microseconds
             data: frame.data,
         });
+
         videoDecoder.decode(chunk);
-        await new Promise(r => setTimeout(r, 2000));
+        framesDecoded++; // Increment immediately when fed to decoder
     }
 
-    // Start the rendering loop
-    isPlaying = true;
-    requestAnimationFrame(renderLoop);
+    // Flush the decoder to ensure all buffered frames are pushed to output
+    videoDecoder.flush().then(() => {
+        console.log("VideoDecoder flushed. All input chunks processed.");
+        // The output callback will handle rendering and final status update
+    }).catch(e => {
+        console.error("Decoder flush failed:", e);
+        statusDiv.textContent = `Decoder flush error: ${e.message}`;
+        playButton.disabled = false;
+    });
 }
 
-/**
- * The main rendering loop that draws decoded frames to the canvas.
- * @param {DOMHighResTimeStamp} now - The current time provided by requestAnimationFrame.
- */
-function renderLoop(now) {
-    console.log("isPlaying:", isPlaying);
-    if (!isPlaying) return;
-
-    if (lastRenderTime === 0) {
-        lastRenderTime = now;
-    }
-
-    // Calculate expected time for the next frame
-    const timeSinceLastFrame = now - lastRenderTime;
-    const targetFrameTime = 1000 / frameRate; // ms per frame
-
-    // Only render if enough time has passed or if we have a backlog of frames
-    if (timeSinceLastFrame >= targetFrameTime && currentFrameQueue.length > 0) {
-        const frame = currentFrameQueue.shift();
-
-        if (frame) {
-            // Resize canvas to video dimensions
-            if (canvas.width !== frame.codedWidth || canvas.height !== frame.codedHeight) {
-                canvas.width = frame.codedWidth;
-                canvas.height = frame.codedHeight;
-                videoWidth = frame.codedWidth;
-                videoHeight = frame.codedHeight;
-            }
-
-            ctx.drawImage(frame, 0, 0, canvas.width, canvas.height);
-            frame.close(); // Release the VideoFrame memory
-            framesRendered++;
-            statusDiv.textContent = `Decoded: ${framesDecoded} | Rendered: ${framesRendered}`;
-            lastRenderTime = now; // Update last render time
-        }
-    }
-
-    if (framesRendered < framesDecoded || currentFrameQueue.length > 0) {
-        animationFrameId = requestAnimationFrame(renderLoop);
-    } else if (videoDecoder && videoDecoder.state === 'configured' && framesRendered >= framesDecoded && currentFrameQueue.length === 0) {
-        // If all frames decoded and rendered, and no frames left in queue,
-        // we can consider looping or stopping.
-        statusDiv.textContent = `Playback finished. Decoded: ${framesDecoded} | Rendered: ${framesRendered}`;
-        console.log("All frames processed and rendered.");
-        isPlaying = false;
-        if (animationFrameId) {
-            cancelAnimationFrame(animationFrameId);
-            animationFrameId = null;
-        }
-        // Optionally, loop the video here by re-initializing or seeking
-        // For simplicity, this example just stops.
-    }
-}
 
 /**
  * Fetches the IVF file, parses it, and starts playback.
@@ -243,6 +201,15 @@ function renderLoop(now) {
 async function loadAndPlayVideo() {
     statusDiv.textContent = "Fetching IVF file...";
     playButton.disabled = true;
+
+    // Reset state for potential re-play
+    framesDecoded = 0;
+    framesRendered = 0;
+    totalIvfFrames = 0;
+    if (videoDecoder) {
+        await videoDecoder.reset(); // Reset decoder if it was already used
+        videoDecoder = null;
+    }
 
     try {
         const response = await fetch(IVF_FILE_PATH);
@@ -260,19 +227,25 @@ async function loadAndPlayVideo() {
 
         videoWidth = ivfHeader.width;
         videoHeight = ivfHeader.height;
-        frameRate = ivfHeader.frameRate;
+        // frameRate = ivfHeader.frameRate; // Not strictly used for timing in this direct draw version
+        totalIvfFrames = ivfHeader.totalFrames; // Use the total frames from the header
 
-        statusDiv.textContent = `Video properties: ${videoWidth}x${videoHeight}, ${frameRate.toFixed(2)} fps`;
+        statusDiv.textContent = `Video properties: ${videoWidth}x${videoHeight}, ${ivfHeader.frameRate.toFixed(2)} fps (Expected: 30fps)`;
         console.log("IVF Header:", ivfHeader);
 
         // Pre-allocate canvas size
         canvas.width = videoWidth;
         canvas.height = videoHeight;
 
-        const ivfFrames = parseIvfFrames(arrayBuffer, ivfHeader.headerSize);
-        console.log(`Parsed ${ivfFrames.length} video frames.`);
+        const ivfEncodedFrames = parseIvfFrames(arrayBuffer, ivfHeader.headerSize);
+        console.log(`Parsed ${ivfEncodedFrames.length} video frames.`);
+        // Ensure totalIvfFrames is accurate from parsing if header's totalFrames is 0 or unreliable
+        if (totalIvfFrames === 0 && ivfEncodedFrames.length > 0) {
+             totalIvfFrames = ivfEncodedFrames.length;
+             console.log("Using parsed frame count as total frames:", totalIvfFrames);
+        }
 
-        await initializeDecoder(ivfFrames);
+        await initializeDecoder(ivfEncodedFrames);
 
     } catch (error) {
         console.error("Error loading or playing video:", error);
