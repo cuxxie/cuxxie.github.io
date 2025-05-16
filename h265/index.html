@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>H.265 IVF WebCodecs Decoder</title>
+    <style>
+        body { font-family: sans-serif; margin: 20px; background-color: #f4f4f4; color: #333; }
+        h1, h2, h3 { color: #0056b3; }
+        input[type="file"], button {
+            margin-top: 10px;
+            padding: 10px 15px;
+            border: 1px solid #007bff;
+            border-radius: 5px;
+            background-color: #007bff;
+            color: white;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        button:disabled {
+            background-color: #cccccc;
+            border-color: #cccccc;
+            cursor: not-allowed;
+        }
+        label {
+            font-weight: bold;
+            margin-bottom: 5px;
+            display: block;
+        }
+        p { margin-bottom: 15px; }
+        hr { border: 0; height: 1px; background: #ddd; margin: 20px 0; }
+        /* Canvas is set to 1920x1080 internally, but displayed smaller for visibility */
+        #outputCanvas { border: 1px solid #ccc; background-color: #eee; width: 640px; height: 360px; display: block; margin-top: 20px; }
+    </style>
+</head>
+<body>
+    <h1>H.265 IVF WebCodecs Decoder Test</h1>
+
+    <div id="app-container">
+        </div>
+
+    <hr>
+    <h3>Decoding Output</h3>
+    <p>Check your browser's **Developer Console** (usually by pressing F12) for decoding logs.</p>
+    <canvas id="outputCanvas" width="1920" height="1080" style="width:640px; height:360px;"></canvas>
+
+    <script type="module" src="decode_h265_ivf.js"></script>
+
+</body>
+</html>
