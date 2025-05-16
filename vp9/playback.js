@@ -5,7 +5,7 @@ const ctx = canvas.getContext('2d');
 const playButton = document.getElementById('playButton');
 const statusDiv = document.getElementById('status');
 
-const IVF_FILE_PATH = 'output_30fps.ivf'; // Ensure this path is correct
+const IVF_FILE_PATH = 'output_30fps.vp9.ivf'; // Ensure this path is correct
 
 let videoDecoder = null;
 let framesDecoded = 0;
