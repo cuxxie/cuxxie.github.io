@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>IVF VP9 Playback with WebCodecs</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            background-color: #f0f0f0;
+            color: #333;
+        }
+        h1 {
+            color: #0056b3;
+        }
+        canvas {
+            border: 2px solid #007bff;
+            background-color: black; /* To show when no video is loaded */
+            display: block;
+            margin-top: 20px;
+            max-width: 90%;
+            height: auto;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+        }
+        button {
+            margin-top: 20px;
+            padding: 10px 20px;
+            font-size: 16px;
+            cursor: pointer;
+            background-color: #28a745;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            transition: background-color 0.3s ease;
+        }
+        button:hover {
+            background-color: #218838;
+        }
+        .status {
+            margin-top: 10px;
+            font-weight: bold;
+            color: #666;
+        }
+    </style>
+</head>
+<body>
+    <h1>IVF VP9 Playback (WebCodecs API)</h1>
+    <canvas id="videoCanvas"></canvas>
+    <button id="playButton">Load and Play Video</button>
+    <div class="status" id="status">Loading...</div>
+
+    <script src="playback.js"></script>
+</body>
+</html>
