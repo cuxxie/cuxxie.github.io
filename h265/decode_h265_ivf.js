@@ -94,7 +94,7 @@
             codedWidth: width,
             codedHeight: height,
             hardwareAcceleration: 'prefer-hardware',
-            //description: descriptionBuffer, // Directly use the loaded ArrayBuffer for description
+            description: descriptionBuffer, // Directly use the loaded ArrayBuffer for description
         };
 
         const decoder = new VideoDecoder({
