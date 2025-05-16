@@ -93,7 +93,8 @@
             codec: `hvc1.1.6.L123.00`,
             codedWidth: width,
             codedHeight: height,
-            description: descriptionBuffer, // Directly use the loaded ArrayBuffer for description
+            hardwareAcceleration: 'prefer-hardware',
+            //description: descriptionBuffer, // Directly use the loaded ArrayBuffer for description
         };
 
         const decoder = new VideoDecoder({
