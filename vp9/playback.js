@@ -188,6 +188,7 @@ async function initializeDecoder(ivfFrames) {
  * @param {DOMHighResTimeStamp} now - The current time provided by requestAnimationFrame.
  */
 function renderLoop(now) {
+    console.log('render Loop called')
     if (!isPlaying) return;
 
     if (lastRenderTime === 0) {
