@@ -151,7 +151,7 @@ async function initializeDecoder(ivfEncodedFrames) {
     });
 
     const config = {
-        codec: 'vp9', // Or 'vp09.00.10.08' if you want to be more specific
+        codec: 'vp09.00.10.08', // Or 'vp09.00.10.08' if you want to be more specific
         codedWidth: videoWidth,
         codedHeight: videoHeight,
     };
